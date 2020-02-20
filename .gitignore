@@ -1,0 +1,6 @@
+*.png
+*.pdf
+*.log
+*.aux
+__pycache__
+__pycache__/*
