@@ -1,48 +1,41 @@
-from latexrenderer import *
+from scene import *
+from geometry import *
+from observers import *
 
-hat_z = (0, 0, 1)
+scene = Scene3D()
+
 hat_r = spherical(1, deg2rad(40), deg2rad(40))
 
 R = 4
-midpoint = scale3(R, hat_r)
+
+midpoint = R * hat_r
 
 plane = Plane(hat_r, midpoint, hat_z)
 
-w = h = 2.5
-plane_edges = [(-w/2, -h/2), (w/2, -h/2), (w/2, h/2), (-w/2, h/2)]
+w = h = 1.5
+scene.polyline(plane.box(-w, w, -h, h), closed=True, style='black')
 
-z_perpendicular = scale3(dot3(hat_z, plane._normal), plane._normal)
-z_transverse = sub3(hat_z, z_perpendicular)
+z_perpendicular = (hat_z & plane._normal) * plane._normal
+z_transverse = hat_z - z_perpendicular
 
-with LaTeXRenderer(SphericalCamera(10, deg2rad(-15), deg2rad(30), 4)) as ctx:
-    ctx.set_scale(3)
+scene.line(plane._origin, plane._origin + plane._normal, style='->')
+scene.label(plane._origin + plane._normal, r'$\hat n$', style='anchor=south west')
 
-    for a, b in zip(plane_edges, plane_edges[1:] + [plane_edges[0]]):
-        A = plane.uv_to_xyz(a)
-        B = plane.uv_to_xyz(b)
-        ctx.line(A, B)
+scene.line(plane._origin, plane._origin + hat_z, style='->')
+scene.label(plane._origin + hat_z, r'$\hat z$', style='anchor=south east')
 
-    ctx.arrow(plane._origin, add3(plane._origin, plane._normal),
-            label=r'$\hat n$',
-            where='anchor=south west')
-    ctx.arrow(plane._origin, add3(plane._origin, hat_z),
-            label=r'$\hat z$',
-            where='anchor=south west')
-    ctx.arrow(plane._origin,
-            add3(plane._origin, z_perpendicular),
-            label=r'$\vec z_{\bot}$',
-            where='anchor=north west',
-            style='very thick')
-    ctx.arrow(plane._origin,
-            add3(plane._origin, z_transverse),
-            label=r'$\vec z_{\parallel}$',
-            where='anchor=east',
-            style='very thick')
+scene.line(plane._origin, plane._origin + z_perpendicular, style='->, very thick')
+scene.label(plane._origin + z_perpendicular, r'$\vec z_{\bot}$', style='anchor=north west')
 
-    ctx.line(add3(plane._origin, hat_z), add3(plane._origin, z_perpendicular),
-            style='dashed, gray')
+scene.line(plane._origin, plane._origin + z_transverse, style='->, very thick')
+scene.label(plane._origin + z_transverse, r'$\vec z_{\parallel}$', style='anchor=east')
 
-    ctx.line(add3(plane._origin, hat_z), add3(plane._origin, z_transverse),
-            style='dashed, gray')
+scene.line(plane._origin + hat_z, plane._origin + z_perpendicular,
+        style='dashed, gray')
 
-    draw_right_angle(ctx, midpoint, hat_r, z_transverse, 0.1)
+scene.line(plane._origin + hat_z, plane._origin + z_transverse,
+        style='dashed, gray')
+
+scene.right_angle(midpoint, hat_r, z_transverse, 0.1)
+
+scene.render_latex(SphericalCamera(15, deg2rad(-15), deg2rad(30), 4), scale=5)
