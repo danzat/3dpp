@@ -45,6 +45,9 @@ class Vector3:
     def normalize(self):
         return self / sqrt(self & self)
 
+    def __repr__(self):
+        return f'({self.x}, {self.y}, {self.z})'
+
 class Plane:
     def __init__(self, normal, origin, y_hint):
         self._normal = normal
