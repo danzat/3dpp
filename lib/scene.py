@@ -53,6 +53,14 @@ class Scene2D:
         _head = self._plane.uv_to_xyz(head)
         self._scene3d.line(_tail, _head, style)
 
+    def label(self, position, text, style=None):
+        _position = self._plane.uv_to_xyz(position)
+        self._scene3d.label(_position, text, style)
+
+    def point(self, p, style=None):
+        _p = self._plane.uv_to_xyz(p)
+        self._scene3d.point(_p, style)
+
 class Scene3D:
     def __init__(self, segments=None, labels=None, points=None):
         self._segments = segments if segments else []
