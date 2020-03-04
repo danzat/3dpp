@@ -12,7 +12,7 @@ midpoint = R * hat_r
 
 plane = Plane(hat_r, midpoint, hat_z)
 
-w = h = 1.5
+w = h = 2.5/2
 scene.polyline(plane.box(-w, w, -h, h), closed=True, style='black')
 
 z_perpendicular = (hat_z & plane._normal) * plane._normal
@@ -38,4 +38,4 @@ scene.line(plane._origin + hat_z, plane._origin + z_transverse,
 
 scene.right_angle(midpoint, hat_r, z_transverse, 0.1)
 
-scene.render_latex(SphericalCamera(15, deg2rad(-15), deg2rad(30), 4), scale=5)
+scene.render_latex(SphericalCamera(10, deg2rad(-15), deg2rad(30), 4), scale=5)
