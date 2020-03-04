@@ -3,4 +3,4 @@
 	-rm $*.pdf $*.log $*.aux
 
 %.tex: %.py
-	python3 $< > $@
+	PYTHONPATH=../lib/ python3 $< > $@
