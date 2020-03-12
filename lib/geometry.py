@@ -42,6 +42,10 @@ class Vector3:
 
     __xor__ = cross
 
+    @property
+    def length(self):
+        return sqrt(self & self)
+
     def normalize(self):
         return self / sqrt(self & self)
 
@@ -110,42 +114,34 @@ XY = Plane(hat_z, O, hat_y)
 YZ = Plane(hat_x, O, hat_z)
 XZ = Plane(hat_y, O, hat_x)
 
-def intersect_segments_(a, b):
-    a0, a1 = a
-    b0, b1 = b
+def does_intersect(ab, cd, plane):
+    a, b = ab
+    c, d = cd
+    n = plane._normal
 
-    da = a1 - a0
-    db = b1 - b0
+    t1 = (c - a) ^ (b - a)
+    t2 = (d - a) ^ (b - a)
+    t3 = (a - c) ^ (d - c)
+    t4 = (b - c) ^ (d - c)
 
-    da_x_db = da ^ db
-    
-    norm_2 = da_x_db & da_x_db
-    if norm_2 < 0.0001:
-        return None
+    return (t1 & n) * (t2 & n) < 0 and (t3 & n) * (t4 & n) < 0
 
-    t = ((b0 - a0) ^ db) & da_x_db / norm_2
-    #(a0 - b0) = s db - t da ; x da
-    #s = [(a0 - b0) x da] . [db x da] / ||db x da||**2
-    s = ((b0 - a0) ^ da) & da_x_db / norm_2
+def intersect(ab, cd):
+    a, b = ab
+    c, d = cd
 
-    return t, s
+    t1 = ((d - c) ^ (a - c)).length
+    t2 = ((a - b) ^ (c - b)).length
+    t3 = ((d - c) ^ (b - c)).length
+    t4 = ((b - a) ^ (c - a)).length
 
-def intersect_segments(a, b):
-    a0, a1 = a
-    b0, b1 = b
+    t = t1 * t2 / (t3 * t4)
+    s = 1 / (1 + t)
 
-    da = a1 - a0
-    db = b1 - b0
+    return s * a + (1 - s) * b
 
-    dab0 = a0 - b0
-    dba0 = b0 - a0
+def intersect_ray_with_segment(v, m, ab):
+    a, b = ab
+    alpha = ((a - v) ^ (b - a)).length / ((m - v) ^ (b - a)).length
 
-    da_x_db = da ^ db
-    
-    norm_2 = da_x_db & da_x_db
-    if norm_2 < 0.0001:
-        return None
-
-    t = ((b0 - a0) ^ db) & da_x_db / norm_2
-    
-    return a0 + t * da
+    return v + alpha * (m - v)
