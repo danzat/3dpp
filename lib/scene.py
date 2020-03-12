@@ -53,6 +53,10 @@ class Scene2D:
         _head = self._plane.uv_to_xyz(head)
         self._scene3d.line(_tail, _head, style)
 
+    def polyline(self, vertices, closed=False, style=None):
+        _vertices = [self._plane.uv_to_xyz(v) for v in vertices]
+        self._scene3d.polyline(_vertices, closed, style)
+
     def label(self, position, text, style=None):
         _position = self._plane.uv_to_xyz(position)
         self._scene3d.label(_position, text, style)
@@ -112,12 +116,12 @@ class Scene3D:
             points.append(point.project_to(observer))
         return Scene3D(segments, labels, points)
 
-    def render_latex(self, observer, scale=4):
+    def render_latex(self, observer, scale=4, font_scale=1):
         print(r'\documentclass[border=5pt, convert={density=250,outext=.png}]{standalone}')
         print(r'\usepackage[dvipsnames]{xcolor}')
         print(r'\usepackage{tikz}')
         print(r'\begin{document}')
-        print(r'\begin{tikzpicture}')
+        print(r'\begin{tikzpicture}[every node/.style={scale={' + str(font_scale) + '}}]')
 
         for segment in self._segments:
             projected_tail = observer.project(segment._tail)
