@@ -1,4 +1,5 @@
 from geometry import *
+from common import pairwise
 
 class Segment:
     def __init__(self, tail, head, style=None):
@@ -6,12 +7,27 @@ class Segment:
         self._head = head
         self._style = style if style else ''
 
+    @property
+    def vertices(self):
+        return self._tail, self._head
+
     def project_to(self, observer):
         return Segment(
                 observer.project(self._tail),
                 observer.project(self._head),
                 style=self._style
                 )
+
+    def fragment(self, breakpoints):
+        fragments = []
+        for t, h in pairwise([self._tail] + breakpoints + [self._head]):
+            # TODO: If this is an arrow, just the final fragment should
+            # inherit the "->" style
+            fragments.append(Segment(t, h, self._style))
+        return fragments
+
+    def __repr__(self):
+        return f'{{{self._tail} -- {self._head}}}'
 
 class Label:
     def __init__(self, position, text, style=None):
@@ -81,7 +97,7 @@ class Scene3D:
         self._labels.append(Label(position, text, style))
 
     def polyline(self, vertices, closed=False, style=None):
-        segments = [Segment(t, h, style) for t, h in zip(vertices[:-1], vertices[1:])]
+        segments = [Segment(t, h, style) for t, h in pairwise(vertices)]
         self._segments.extend(segments)
         if closed:
             self._segments.append(Segment(vertices[-1], vertices[0], style))
@@ -116,14 +132,59 @@ class Scene3D:
             points.append(point.project_to(observer))
         return Scene3D(segments, labels, points)
 
-    def render_latex(self, observer, scale=4, font_scale=1):
-        print(r'\documentclass[border=5pt, convert={density=250,outext=.png}]{standalone}')
+    def fragment_segments(self, observer):
+        V = observer._camera_position
+        fragments = []
+        for segment in self._segments:
+            intersections = []
+            for other in self._segments:
+                if segment == other:
+                    continue
+                ab = segment.project_to(observer)
+                cd = other.project_to(observer)
+                if not does_intersect(ab.vertices, cd.vertices, observer.screen):
+                    continue
+                m = intersect(ab.vertices, cd.vertices)
+                M = intersect_ray_with_segment(V, m, segment.vertices)
+                intersections.append(M)
+            if len(intersections) > 1:
+                start = segment.vertices[0]
+                intersections.sort(key=lambda i: (i - start) & (i - start))
+                midpoints = [(a + b) / 2 for a, b in pairwise(intersections)]
+                fragments.extend(segment.fragment(midpoints))
+            else:
+                fragments.append(segment)
+        return fragments
+
+    def sort_segments(self, fragments, observer):
+        V = observer._camera_position
+        for i in range(len(fragments)):
+            ab = fragments[i].project_to(observer)
+            for j in range(i + 1, len(fragments)):
+                cd = fragments[j].project_to(observer)
+                if not does_intersect(ab.vertices, cd.vertices, observer.screen):
+                    continue
+                m = intersect(ab.vertices, cd.vertices)
+                alpha = distance_to_segment(V, m, fragments[i].vertices)
+                beta = distance_to_segment(V, m, fragments[j].vertices)
+                if alpha < beta:
+                    fragments[i], fragments[j] = fragments[j], fragments[i]
+
+    def render_latex(self, observer, scale=4, font_scale=1, density=250, sort=True):
+        print(r'\documentclass[border=5pt, convert={density=' + str(density) + ',outext=.png}]{standalone}')
         print(r'\usepackage[dvipsnames]{xcolor}')
         print(r'\usepackage{tikz}')
         print(r'\begin{document}')
         print(r'\begin{tikzpicture}[every node/.style={scale={' + str(font_scale) + '}}]')
+        #print(r'\draw[use as bounding box] (-2,-2) rectangle (2,2);')
 
-        for segment in self._segments:
+        if sort:
+            segments = self.fragment_segments(observer)
+            self.sort_segments(segments, observer)
+        else:
+            segments = self._segments
+
+        for segment in segments:
             projected_tail = observer.project(segment._tail)
             projected_head = observer.project(segment._head)
 
@@ -133,7 +194,7 @@ class Scene3D:
             style_fmt = ''
             if segment._style:
                 style_fmt = f'[{segment._style}]'
-            print(f'\draw{style_fmt} ({xt}, {yt}) -- ({xh}, {yh});')
+            print(fr'\draw{style_fmt} ({xt}, {yt}) -- ({xh}, {yh});')
 
         for point in self._points:
             projected_position = observer.project(point._position)

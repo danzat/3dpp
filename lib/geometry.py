@@ -140,8 +140,10 @@ def intersect(ab, cd):
 
     return s * a + (1 - s) * b
 
-def intersect_ray_with_segment(v, m, ab):
+def distance_to_segment(v, m, ab):
     a, b = ab
-    alpha = ((a - v) ^ (b - a)).length / ((m - v) ^ (b - a)).length
+    return ((a - v) ^ (b - a)).length / ((m - v) ^ (b - a)).length
 
+def intersect_ray_with_segment(v, m, ab):
+    alpha = distance_to_segment(v, m, ab)
     return v + alpha * (m - v)
