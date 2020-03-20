@@ -145,7 +145,7 @@ Each entity's construct accepts a `style` parameter which is just what would go 
 Lines are specified by their endpoints, which should be `Vector3` instances.
 
 ```python
-scene.line(Vector3(-1, -1, -1), Vector3(-1, -1, 1))
+scene.line(Vector3(-1, -1, -1), Vector3(-1, 1, 1), style='blue, very thick')
 scene.render_latex(SphericalCamera(15, deg2rad(10), deg2rad(30), 4))
 ```
 
