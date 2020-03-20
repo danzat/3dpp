@@ -20,10 +20,11 @@ class Segment:
 
     def fragment(self, breakpoints):
         fragments = []
+        elements = [elem.strip() for elem in self._style.split(',')]
+        line_style = ', '.join(elem for elem in elements if elem != '->')
         for t, h in pairwise([self._tail] + breakpoints + [self._head]):
-            # TODO: If this is an arrow, just the final fragment should
-            # inherit the "->" style
-            fragments.append(Segment(t, h, self._style))
+            fragments.append(Segment(t, h, line_style))
+        fragments[-1]._style = self._style
         return fragments
 
     def __repr__(self):
