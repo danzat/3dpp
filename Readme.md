@@ -12,6 +12,14 @@ make script-filename.png
 
 You should have [XeTeX](http://xetex.sourceforge.net/) and [ImageMagick®](https://imagemagick.org/index.php) installed for the `Makefile` to work.
 
+## How does it work?
+
+Read all about how all this 3D stuff works in my blog series:
+
+* [Basics of 3D](https://danzat.github.io/3d/graphics/2020/02/07/3d-perspective-projection.html)
+* [Sorting segments in 3D space](https://danzat.github.io/3d/graphics/z-sort/painters/algorithm/2020/03/14/3d-dealing-with-overlaps.html)
+* To be continued!
+
 ## Geometry
 
 ### Vector3
@@ -107,6 +115,7 @@ observer.screen
 ## Scene3D
 
 A scene is a collection of 3d entities: lines, points and labels.
+
 You create a scene by just instantiating it:
 
 ```python
@@ -126,6 +135,35 @@ scene.render(observer, scale=3)
 ```
 
 Upon calling `render`, LaTeX code will be emitted to standard output.
+
+### Drawing in 3D space
+
+Each entity's construct accepts a `style` parameter which is just what would go in the square brackets of TikZ elements.
+
+#### Line
+
+Lines are specified by their endpoints, which should be `Vector3` instances.
+
+```python
+scene.line(Vector3(-1, -1, -1), Vector3(-1, -1, 1))
+scene.render_latex(SphericalCamera(15, deg2rad(10), deg2rad(30), 4))
+```
+
+![line](doc/line.png)
+
+To draw an arrow, just add `"->"` to the `style` parameter:
+```python
+scene.line(Vector3(-0.5, 0, 0), Vector3(2, 0, 0), style='red, ->')
+scene.line(Vector3(0, -0.5, 0), Vector3(0, 2, 0), style='green, thick, ->')
+scene.line(Vector3(0, 0, -0.5), Vector3(0, 0, 1), style='blue, dashed, ->')
+scene.render_latex(SphericalCamera(15, deg2rad(10), deg2rad(30), 4))
+```
+
+![arrow](doc/arrow.png)
+
+#### Point
+
+#### Label
 
 ### Drawing on a plane
 
